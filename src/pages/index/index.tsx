@@ -32,6 +32,7 @@ interface Index {
 
 const recorderManager = Taro.getRecorderManager()
 const innerAudioContext = Taro.createInnerAudioContext()
+const screenHeight = Taro.getSystemInfoSync().windowHeight
 
 class Index extends Component {
   state = {
@@ -215,7 +216,6 @@ class Index extends Component {
    * 高转换
    */
   cHW(size) {
-    let screenHeight = Taro.getSystemInfoSync().windowHeight;
     return (size / 667) * screenHeight;
   }
 
