@@ -308,23 +308,25 @@ class Index extends Component {
       if (moveDistance < - this.cHW(20) && index > 0 && !this.updateStatus) {
         let preCellHeight = this.cellHeight(contents[index - 1])
         // 上移
-        this.updateStatus = true
-        if (contents[index].contentType === selectedContent.contentType) {
-          contents.splice(index, 1);
-          contents.splice(--index, 0, selectedContent);
-        }
-        positionY -= preCellHeight;
-        let that = this
-        this.setState({
-          contents: contents,
-          selectedItem: {
-            index: index,
-            positionY: positionY
+        if (moveDistance < -preCellHeight - this.cHW(20)) {
+          this.updateStatus = true
+          if (contents[index].contentType === selectedContent.contentType) {
+            contents.splice(index, 1);
+            contents.splice(--index, 0, selectedContent);
           }
-        }, function () {
-          that.updateStatus = false
-        })
-        log('上移', index)
+          positionY -= preCellHeight;
+          let that = this
+          this.setState({
+            contents: contents,
+            selectedItem: {
+              index: index,
+              positionY: positionY
+            }
+          }, function () {
+            that.updateStatus = false
+          })
+          log('上移', index)
+        }
       }
     }
   }
