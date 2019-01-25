@@ -1,6 +1,6 @@
 import { ComponentClass } from 'react'
 import Taro, {Component} from '@tarojs/taro'
-import { View, Image, Text, ScrollView, Input, Textarea, Video, Button, MovableArea, MovableView } from '@tarojs/components'
+import { View, Image, Text, CoverView, CoverImage, Input, Textarea, Video, Button, MovableArea, MovableView } from '@tarojs/components'
 
 import '../../app.css'
 import './Index.css'
@@ -74,6 +74,21 @@ class Index extends Component {
 
   componentWillMount () { }
 
+  onPageScroll () {
+    let that = this;
+    var query = Taro.createSelectorQuery()
+    query.select('.content-view').boundingClientRect()
+    query.selectViewport().scrollOffset()
+    query.exec(function(res) {
+      that.setState({
+        scrollPosition: {
+          scrollTop: res[1].scrollTop,
+          scrollY: that.state.scrollPosition.scrollY
+        },
+      })
+    })
+  }
+
   onBackTo () {
     Taro.navigateBack({
       delta: 1
@@ -107,7 +122,7 @@ class Index extends Component {
   }
 
   makePreview () {
-    let {product, isOwn, contents,userInfo, customerProductName,customerProductDescription,customerPrice, targetAmount,timeoutInDays,pickupLocation,address,sellerInfo, mobilePhone} = this.state
+    let {userInfo, customerProductName,customerProductDescription,customerPrice, targetAmount,timeoutInDays,pickupLocation,address,sellerInfo, mobilePhone} = this.state
     if (!userInfo) {
       showError('请授权获取你的微信头像与昵称')
       return
@@ -249,6 +264,7 @@ class Index extends Component {
     let start =  this.getPositionDomByXY(e.changedTouches[0].clientY)
     log('start', start)
     if (start.nowY - start.startY < this.cHW(40)) {
+      e.stopPropagation()
       this.setState({
         movableViewPosition:{
           x: 0,
@@ -273,6 +289,7 @@ class Index extends Component {
     let {contents, selectedItem, selectedContent, scrollPosition} = this.state
     let {index, positionY} = selectedItem
     if (!scrollPosition.scrollY) {
+      e.stopPropagation()
       let moveableY = e.changedTouches[0].clientY + scrollPosition.scrollTop - 300
       let moveDistance = e.changedTouches[0].clientY - positionY
       log('moveDistance', moveDistance)
@@ -283,7 +300,7 @@ class Index extends Component {
         }
       })
       if (moveDistance > 0 && index < contents.length -1  && !this.updateStatus) {
-        let nextCellHeight = this.cellHeight(contents[index + 1])
+        let nextCellHeight = this.cellHeight(contents[index +1])
         if (moveDistance >= nextCellHeight) {
           // 下移
           this.updateStatus = true
@@ -347,16 +364,6 @@ class Index extends Component {
         scrollY: true
       },
       selectedContent: {}
-    })
-  }
-
-  bindscroll (e) {
-    var scrollTop = e.detail.scrollTop;
-    this.setState({
-      scrollPosition: {
-        scrollTop: scrollTop,
-        scrollY: true
-      }
     })
   }
 
@@ -630,17 +637,17 @@ class Index extends Component {
     let {deadline, product, userInfo, customerProductName, customerPrice, customerProductDescription, targetAmount, timeoutInIndex, pickupLocation,address, contents, movableViewPosition, isOwn, playAudioNum, showMobile, sellerInfo, selectedItem, scrollPosition, selectedContent} = this.state;
     return (
       <View className='white-bg flex-1 container flexDirection-c position-r pt-32 clear-padding'>
-        <View className={'red-bg-1 pt-10 position-f base-width-12 left-none top-none'}>
-          <View className={'height-22 flexDirection-r'}>
-            <View className={'ph-10 base-height-12 flexDirection-c justifyContentCenter'} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100} onClick={this.onBackTo.bind(this)}>
-              <Image className={'d-b width-10 height-7'} mdoe={'aspectFit'} src={require('../../public/img/back.png')} />
-            </View>
-            <Text className={'flex-1 d-b fs-17 white-c lh-22'}>立即开团</Text>
-          </View>
-        </View>
+        <CoverView className={'red-bg-1 pt-10 position-f base-width-12 left-none top-none'} style={'z-index:399'}>
+          <CoverView className={'height-22 flexDirection-r'}>
+            <CoverView className={'ph-10 base-height-12 flexDirection-c justifyContentCenter'} onClick={this.onBackTo.bind(this)}>
+              <CoverImage className={'d-b width-10 height-7'} src={require('../../public/img/back.png')} />
+            </CoverView>
+            <CoverView className={'flex-1 d-b fs-17 white-c lh-22'}>立即开团</CoverView>
+          </CoverView>
+        </CoverView>
         <View className={'flex-1 position-r flexDirection-c'}>
-          <ScrollView className={'base-width-12 base-height-12'} scrollY={scrollPosition.scrollY} onScroll={this.bindscroll}>
-            <View className={'pt-10 pb-10'}>
+          <View className={'content-view base-width-12 '}>
+            <View className={'pt-10 pb-10 mb-24'}>
               <View className={'mb-8'}>
                 <View className={'flexDirection-r alignItemsCenter'}>
                   <View className={'red-bg-1 width-2 height-7 mr-8'} />
@@ -686,7 +693,7 @@ class Index extends Component {
                         <MovableView className='base-width-12' direction='vertical' inertia={false} damping={9999} friction={9999} y={movableViewPosition.y}>
                           {selectedContent.contentType === 0 &&
                           <View className={'flexDirection-c pa-8 pt-6 gray-bg-1 bdr-2 pb-10 mb-10'}>
-                            <View className={'flexDirection-r alignItemsCenter mb-11'}>
+                            <View className={'flexDirection-r alignItemsCenter mb-12'}>
                               <Text className={'d-b flex-1 fs-14 gray-c-19 lh-12'}>添加文字</Text>
                               <View className={'ph-4 height-11 bdr-2 yellow-bg-1 ml-8'} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100}>
                                 <Text className={'d-b fs-11 white-c lh-11'}>移除</Text>
@@ -695,13 +702,8 @@ class Index extends Component {
                                 <Text className={'d-b fs-11 white-c lh-11'}>拖拽</Text>
                               </View>
                             </View>
-                            <Textarea className={'fs-14 gray-c-19 lh-5 mt-none base-width-12 mb-6 textarea-v'}
-                                      placeholderClass={'fs-14 gray-c-h-19'}
-                                      placeholder={'请输入'}
-                                      maxlength={1000}
-                                      value={selectedContent.content}
-                                      autoHeight={false}
-                            />
+                            <Text className={selectedContent.content?'fs-13 gray-c-19 lh-8 mt-none base-width-12 mb-6 textarea-v overflow-h':'fs-14 gray-c-h-19 lh-5 mt-none base-width-12 mb-6 textarea-vv pt-5 pl-3'}
+                            >{selectedContent.content? selectedContent.content: '请输入'}</Text>
                             <View className={(selectedContent.content ? 'finish-bd':'default-bd')} />
                           </View>
                           }
@@ -750,7 +752,7 @@ class Index extends Component {
                             selectedContent.contentType === 1 &&
                             <View className={'flexDirection-c pa-8 pt-6 gray-bg-1 bdr-2 pb-10 mb-10'}>
                               <View className={'flexDirection-r alignItemsCenter mb-11'}>
-                                <Text className={'d-b flex-1 fs-14 gray-c-19 lh-12'}>添加图片（0/9）</Text>
+                                <Text className={'d-b flex-1 fs-14 gray-c-19 lh-12'}>添加图片（{selectedContent.subContents.length}/9）</Text>
                                 <View className={'ph-4 height-11 bdr-2 yellow-bg-1 ml-8'} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100}>
                                   <Text className={'d-b fs-11 white-c lh-11'}>移除</Text>
                                 </View>
@@ -808,7 +810,7 @@ class Index extends Component {
                               selectedContent.contentUrl ?
                                 <View className={'flexDirection-c'}>
                                   <Video  className={'base-width-12 bdr-4 h388 overflow-h'}
-                                          src={selectedContent.contentUrl}
+                                          src={selectedContent.content}
                                           controls={true}
                                           autoplay={false}
                                           poster={require('../../public/img/play.png')}
@@ -845,14 +847,18 @@ class Index extends Component {
                                 <Text className={'d-b fs-11 white-c lh-11'}>拖拽</Text>
                               </View>
                             </View>
-                            <Textarea className={'fs-14 gray-c-19 lh-5 mt-none base-width-12 mb-6 textarea-v'}
-                                      placeholderClass={'fs-14 gray-c-h-19'}
-                                      placeholder={'请输入'}
-                                      maxlength={1000}
-                                      value={item.content}
-                                      onInput={this.changeText.bind(this, index)}
-                                      autoHeight={false}
-                            />
+                            {scrollPosition.scrollY ?
+                              <Textarea className={'fs-14 gray-c-19 lh-5 mt-none base-width-12 mb-6 textarea-v'}
+                                        placeholderClass={'fs-14 gray-c-h-19'}
+                                        placeholder={'请输入'}
+                                        maxlength={1000}
+                                        value={item.content}
+                                        onInput={this.changeText.bind(this, index)}
+                                        autoHeight={false}
+                              />: <Text className={item.content?'fs-13 gray-c-19 lh-8 mt-none base-width-12 mb-6 textarea-v overflow-h':'fs-14 gray-c-h-19 lh-5 mt-none base-width-12 mb-6 textarea-vv pt-5 pl-3'}
+                              >{item.content? item.content: '请输入'}</Text>
+                            }
+
                             <View className={(item.content ? 'finish-bd':'default-bd')} />
                           </View>
                           }
@@ -905,7 +911,7 @@ class Index extends Component {
                             item.contentType === 1 &&
                             <View className={selectedItem.index === index ? 'flexDirection-c pa-8 pt-6 bdr-2 pb-10 mb-10 gray-bg-8':'flexDirection-c pa-8 pt-6 gray-bg-v-1 bdr-2 pb-10 mb-10'}>
                               <View className={'flexDirection-r alignItemsCenter mb-11'}>
-                                <Text className={'d-b flex-1 fs-14 gray-c-19 lh-12'}>添加图片（0/9）</Text>
+                                <Text className={'d-b flex-1 fs-14 gray-c-19 lh-12'}>添加图片（{item.subContents.length}/9）</Text>
                                 <View className={'ph-4 height-11 bdr-2 yellow-bg-1 ml-8'} onClick={this.deleteItem.bind(this, index)} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100}>
                                   <Text className={'d-b fs-11 white-c lh-11'}>移除</Text>
                                 </View>
@@ -962,8 +968,8 @@ class Index extends Component {
                             {
                               item.contentUrl ?
                                 <View className={'flexDirection-c'}>
-                                  <Video  className={'base-width-12 bdr-4 h388 overflow-h'}
-                                          src={item.contentUrl}
+                                  <Video  className='base-width-12 bdr-4 h388 overflow-h'
+                                          src={item.content}
                                           controls={true}
                                           autoplay={false}
                                           poster={require('../../public/img/play.png')}
@@ -1096,7 +1102,7 @@ class Index extends Component {
                     <View className={'pt-6'}>
                       <Text className={'d-b fs-14 cyan-c-1 lh-12'}>成团目标</Text>
                       <View className={'flexDirection-c'}>
-                        <Input type='text'
+                        <Input type='number'
                                placeholder='请输入'
                                value={targetAmount}
                                onInput={this.updateTargetAmount}
@@ -1120,36 +1126,37 @@ class Index extends Component {
                 </View>
               </View>
             </View>
-          </ScrollView>
-        </View>
-        <View className={'gray-bg-5 bt-gray-11 flexDirection-r height-24 '}>
-          <View className={'flex-1 flexDirection-r'}>
-            <View className={'flex-1 '} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100} onClick={this.updateDraft.bind(this)}>
-              <Text className={'d-b tx-c fs-17 red-c-1 lh-24'}>保存草稿</Text>
-            </View>
-          </View>
-          <View className={'flex-1 red-bg-1'} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100} onClick={this.makePreview.bind(this)}>
-            <Text className={'d-b tx-c fs-17 white-c lh-24'}>生成预览</Text>
           </View>
         </View>
+        <CoverView className={'gray-bg-5 position-f bottom-none left-none base-width-12 bt-gray-11 flexDirection-r height-24 '} style={'z-index:399'}>
+          <CoverView className={'flex-1 flexDirection-r'}>
+            <CoverView className={'flex-1 '} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100} onClick={this.updateDraft.bind(this)}>
+              <CoverView className={'d-b tx-c fs-17 red-c-1 lh-24'}>保存草稿</CoverView>
+            </CoverView>
+          </CoverView>
+          <CoverView className={'flex-1 red-bg-1'} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100} onClick={this.makePreview.bind(this)}>
+            <CoverView className={'d-b tx-c fs-17 white-c lh-24'}>生成预览</CoverView>
+          </CoverView>
+        </CoverView>
 
-        <View className={'position-f base-width-12 base-height-12 all-none flexDirection-c justifyContentCenter ph-24 clear-padding'} style={'z-index:299'} hidden={!showMobile}>
-          <View className={'position-a base-width-12 base-height-12 all-none mask-bg-16'} />
-          <View className={'position-r white-bg bdr-6 overflow-h mask-shadow-1'}>
-            <View className={'flexDirection-c bb-gray-5'}>
-              <Text className={'d-b fs-16 gray-c-19 lh-11 mh-10 mt-12 mb-20'}>需要提供手机号码，方便参团用户联系你！</Text>
+        <CoverView className={'position-f base-width-12 base-height-12 all-none flexDirection-c justifyContentCenter ph-24 clear-padding'} hidden={!showMobile}>
+          <CoverView className={'position-a base-width-12 base-height-12 all-none mask-bg-16'} />
+          <CoverView className={'position-r white-bg bdr-6 overflow-h mask-shadow-1'}>
+            <CoverView className={'flexDirection-c'}>
+              <CoverView className='d-b fs-16 gray-c-19 lh-11 mh-10 mt-12 mb-20' style={'white-space: normal;'}>需要提供手机号码，方便参团用户联系你！</CoverView>
 
-            </View>
-            <View className={'flexDirection-r alignItemsCenter height-24'}>
-              <View className={'flex-1 flexDirection-c alignItemsCenter justifyContentCenter'} onClick={this.closeMobile} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100}>
-                <Text className={'d-b fs-16 gray-c-11 lh-8'}>返回</Text>
-              </View>
+            </CoverView>
+            <CoverView className='flexDirection-c base-width-12 topBar'/>
+            <CoverView className={'flexDirection-r alignItemsCenter height-24'}>
+              <CoverView className={'flex-1 flexDirection-c alignItemsCenter justifyContentCenter'} onClick={this.closeMobile} >
+                <CoverView className={'d-b fs-16 gray-c-11 lh-9'}>返回</CoverView>
+              </CoverView>
               <Button className={'flex-1 transparent-bg bdr-none flexDirection-c alignItemsCenter justifyContentCenter'} openType='getPhoneNumber' onGetPhoneNumber={this.getPhone} hoverClass={'opacity-10'} hoverStartTime={0} hoverStayTime={100}>
-                <Text className={'d-b fs-16 blue-c-3 fw-5 lh-8'}>授权</Text>
+                <CoverView className={'d-b fs-16 blue-c-3 fw-5 lh-9'}>授权</CoverView>
               </Button>
-            </View>
-          </View>
-        </View>
+            </CoverView>
+          </CoverView>
+        </CoverView>
       </View>
     )
   }

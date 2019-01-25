@@ -31,6 +31,9 @@
 .textarea-v{
   height: 164px;
 }
+.textarea-vv{
+  height: 140px;
+}
 .textarea-v-min{
   min-height: 164px;
 }
@@ -93,3 +96,4 @@
   height: 100%;
   background-color: #E5E5E5;
 }
+
